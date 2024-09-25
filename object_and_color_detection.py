@@ -46,7 +46,7 @@ def get_dominant_color(image):
 
 if __name__ == "__main__":
     # Sökväg till bilden i images-mappen
-    image_path = "images/test_image.jpg"
+    image_path = "test_image.jpg"
     
     # Kör objekt- och färgdetektering
     detected_objects = detect_objects(image_path)
