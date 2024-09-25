@@ -93,7 +93,7 @@ def get_dominant_color(image):
 
 if __name__ == "__main__":
     # Path to image in images-folder
-    image_path = "test_image.jpg"
+    image_path = "images/apelsin.jpg"
     
     # Run object- and color detection
     detected_objects = detect_objects(image_path)
