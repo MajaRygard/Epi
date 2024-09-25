@@ -130,7 +130,7 @@ def get_shape(image):
 
 if __name__ == "__main__":
     # Path to image in images-folder
-    image_path = "images/fruktskal.jpg"
+    image_path = "images/muggar.jpg"
     
     # Run object- and color detection
     detected_objects = detect_objects(image_path)
