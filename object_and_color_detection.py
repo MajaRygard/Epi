@@ -1,7 +1,8 @@
 import torch
 import cv2
+import numpy as np
 
-# Load YOLOv5-modellen via PyTorch Hub
+# Load YOLOv5 model via PyTorch Hub
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s')  # YOLOv5s is a smaller model
 
 def detect_objects(image_path):
@@ -10,8 +11,10 @@ def detect_objects(image_path):
     
     # Run object identification with YOLO
     results = model(image)
+
+    print("hejhej", results)
     
-    # Retrieve bounding boxes and classifications from YOLO-results
+    # Retrieve bounding boxes and classifications from YOLO results
     boxes = results.xyxy[0]  # Bounding boxes in xyxy-format
     objects_info = []
     
@@ -25,11 +28,15 @@ def detect_objects(image_path):
         # Call function to get dominant color
         dominant_color = get_dominant_color(object_image)
         
-        # Save information on object and its color
+        # Call function to get shape
+        shape = get_shape(object_image)
+        
+        # Save information on object, its color, and shape
         objects_info.append({
             "class_id": class_id.item(),
             "confidence": confidence.item(),
-            "dominant_color": dominant_color
+            "dominant_color": dominant_color,
+            "shape": shape
         })
     
     return objects_info
@@ -80,7 +87,6 @@ def hsv_to_color_name(h, s, v):
 
     return color
 
-
 def get_dominant_color(image):
     # Convert image to HSV color wheel
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -91,22 +97,53 @@ def get_dominant_color(image):
     # Return dominant color in HSV
     return avg_color_per_row
 
+def get_shape(image):
+    # Convert image to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # Apply a threshold to get a binary image
+    _, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+    # Find contours
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Assuming there is at least one contour found
+    if contours:
+        # Get the largest contour
+        contour = max(contours, key=cv2.contourArea)
+
+        # Approximate the shape of the contour
+        perimeter = cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, 0.02 * perimeter, True)
+
+        # Determine shape based on the number of vertices
+        num_vertices = len(approx)
+
+        if num_vertices == 3:
+            return "Triangle"
+        elif num_vertices == 4:
+            aspect_ratio = cv2.contourArea(contour) / (cv2.boundingRect(contour)[2] * cv2.boundingRect(contour)[3])
+            return "Square" if 0.95 <= aspect_ratio <= 1.05 else "Rectangle"
+        elif num_vertices == 5:
+            return "Pentagon"
+        elif num_vertices > 5:
+            return "Circle"
+    return "Unknown"
+
 if __name__ == "__main__":
     # Path to image in images-folder
-    image_path = "images/apelsin.jpg"
+    image_path = "images/fruktskal.jpg"
     
     # Run object- and color detection
     detected_objects = detect_objects(image_path)
 
     # Print results
     for obj in detected_objects:
-
-        print(obj['dominant_color'])
-
+        print(f"Object Class ID: {obj['class_id']}, Confidence: {obj['confidence']}")
+        print(f"Dominant Color: {obj['dominant_color']}")
+        
         h = obj['dominant_color'][0]
         s = obj['dominant_color'][1]
         v = obj['dominant_color'][2]
 
         name = hsv_to_color_name(h, s, v)
-
-        print(name)
+        print(f"Color Name: {name}")
+        print(f"Shape: {obj['shape']}")
