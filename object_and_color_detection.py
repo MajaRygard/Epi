@@ -34,8 +34,55 @@ def detect_objects(image_path):
     
     return objects_info
 
+def hsv_to_color_name(h, s, v):
+    # Ensure hue is between 0 and 360
+    h = h % 360
+    s = s / 100
+    v = v / 100
+
+    # Check for grayscale colors
+    if v <= 0.2:
+        return "Black"
+    elif v >= 0.9 and s <= 0.2:
+        return "White"
+    elif s <= 0.2:
+        return "Gray"
+
+    # Define color ranges based on hue
+    if (h >= 0 and h <= 15) or (h >= 345 and h <= 360):
+        color = "Red"
+    elif h > 15 and h <= 45:
+        color = "Orange"
+    elif h > 45 and h <= 75:
+        color = "Yellow"
+    elif h > 75 and h <= 90:
+        color = "Lime"
+    elif h > 90 and h <= 150:
+        color = "Green"
+    elif h > 150 and h <= 180:
+        color = "Cyan"
+    elif h > 180 and h <= 210:
+        color = "Sky Blue"
+    elif h > 210 and h <= 270:
+        color = "Blue"
+    elif h > 270 and h <= 300:
+        color = "Purple"
+    elif h > 300 and h < 345:
+        color = "Magenta/Pink"
+    else:
+        color = "Unknown"
+
+    # Further adjust based on saturation and value for brightness and darkness
+    if v >= 0.7 and s <= 0.5:
+        color = "Light " + color
+    elif v <= 0.5:
+        color = "Dark " + color
+
+    return color
+
+
 def get_dominant_color(image):
-    # Omvandla bilden till HSV färgrymd
+    # Convert image to HSV color wheel
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     
     # Calculate mean of color code
@@ -53,4 +100,13 @@ if __name__ == "__main__":
 
     # Print results
     for obj in detected_objects:
-        print(f"Objektklass: {obj['class_id']}, Dominant färg (HSV): {obj['dominant_color']}")
+
+        print(obj['dominant_color'])
+
+        h = obj['dominant_color'][0]
+        s = obj['dominant_color'][1]
+        v = obj['dominant_color'][2]
+
+        name = hsv_to_color_name(h, s, v)
+
+        print(name)
