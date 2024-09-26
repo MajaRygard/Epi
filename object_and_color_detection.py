@@ -12,7 +12,7 @@ def detect_objects(image_path):
     # Run object identification with YOLO
     results = model(image)
 
-    print("hejhej", results)
+    print("Printar ut resultatet från vad modellen hittar:", results)
     
     # Retrieve bounding boxes and classifications from YOLO results
     boxes = results.xyxy[0]  # Bounding boxes in xyxy-format
