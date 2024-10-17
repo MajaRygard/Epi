@@ -1,7 +1,10 @@
+import json
 import torch
 import cv2
 import numpy as np
 from scipy.spatial import distance
+import requests
+import base64
 
 # Load YOLOv5 model via PyTorch Hub
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s')  # YOLOv5s is a smaller model
@@ -161,15 +164,61 @@ def closest_color(avg_color):
 
     return closest_color_name
 
+def rgb_to_normalized(r, g, b):
+    return (r / 255.0, g / 255.0, b / 255.0)
+
 if __name__ == "__main__":
+
+    # Adress to video stream http://righteye.local:8080/stream
+    
+
+    _url = "http://localhost:8000/update?data=Epi.RightEye%23EYE.RED%2BGREEN%2BBLUE%3Argb"
+    url = "http://localhost:8000/update?data=Epi.RightEye%23EYE.RED%2BGREEN%2BBLUE%3Argb"
+    response = requests.get(url)
+    if response.status_code == 200:
+        print("BILDEN: ", response.text)
+        base64_image = response.text  # Anta att du får bilden som text
+    else:
+        print(f'Fel: {response.status_code}')
+
+    data = json.loads(response.text)
+
+    # Hämta Base64-strängen
+
+    base64_image = data['data']['EYE.RED+GREEN+BLUE:rgb']
+
+    # Ta bort prefixet
+    header, encoded = base64_image.split(',', 1)
+
+    # Dekoda Base64
+    image_data = base64.b64decode(encoded)
+
+
+    with open('image.jpg', 'wb') as f:
+        f.write(image_data)
+
     # Path to image in images-folder
-    image_path = "images/grönKloss.jpg"
+    image_path = "images/RosaBollVitBakgrund.jpg"
     
     # Run object- and color detection
     detected_objects = detect_objects(image_path)
 
     # Print results
     for obj in detected_objects:
+        url = 'http://localhost:8000/control/SR.positions/'
+
+        url_r = f"{url}19/0/{obj['rgb'][0]/255.0}"
+        response = requests.get(url_r)
+
+        url_g = f"{url}20/0/{obj['rgb'][1]/255.0}"
+        response = requests.get(url_g)
+
+        url_b = f"{url}21/0/{obj['rgb'][2]/255.0}"
+        response = requests.get(url_b)
+
+        url = "http://localhost:8000/command/EpiSpeech.say/0/0/"
+        respons = requests.get(f"{url}{obj['color']}")
+
         print(f"Dominant Color: {obj['color']}")
         print(f"RGB Color: {obj['rgb']}")
         print(f"Shape: {obj['shape']}")
